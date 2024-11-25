@@ -19,15 +19,23 @@ def stemming(content):
     stemmed_content = ' '.join(stemmed_content)
     return stemmed_content
 
-# Load and preprocess the dataset
-@st.cache_data(allow_output_mutation=True)
+# Cache the dataset loading function
+@st.cache_data
 def load_data():
-    news_dataset = pd.read_csv('train.csv')
+    news_dataset = pd.read_csv('C:/Users/HP/Desktop/Fake News Detection/train.csv')
     news_dataset = news_dataset.fillna('')
     news_dataset['content'] = news_dataset['author'] + ' ' + news_dataset['title']
     news_dataset['content'] = news_dataset['content'].apply(stemming)
     return news_dataset
 
+# Cache the model training function
+@st.cache_resource
+def train_model(X_train, Y_train):
+    model = LogisticRegression()
+    model.fit(X_train, Y_train)
+    return model
+
+# Load and preprocess the dataset
 data = load_data()
 
 # Prepare data for training
@@ -41,9 +49,8 @@ X_tfidf = tfidf_vectorizer.fit_transform(X)
 # Train-test split
 X_train, X_test, Y_train, Y_test = train_test_split(X_tfidf, Y, test_size=0.2, stratify=Y, random_state=2)
 
-# Build and train the Logistic Regression Model
-logreg_model = LogisticRegression()
-logreg_model.fit(X_train, Y_train)
+# Train the model
+logreg_model = train_model(X_train, Y_train)
 
 # Streamlit App Interface
 st.title("Fake News Detector")
